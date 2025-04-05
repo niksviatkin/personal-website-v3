@@ -1,0 +1,15 @@
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: portfolio-v3-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_v3_dev_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_v3_dev_data:
