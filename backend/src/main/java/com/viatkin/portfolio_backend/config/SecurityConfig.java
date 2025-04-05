@@ -24,12 +24,12 @@ public class SecurityConfig {
                 )
                 // You might keep defaults for login forms/http basic if other parts need them later
                 .formLogin(withDefaults()) // Example: using default form login config
-                .httpBasic(withDefaults()); // Example: using default http basic config
+                .httpBasic(withDefaults()) // Example: using default http basic config
 
         // If using permitAll() for specific paths, CSRF protection is usually still good to have enabled.
         // Only disable CSRF if absolutely necessary & you understand the implications,
         // often needed for stateless APIs or if handling CSRF differently.
-        // .csrf(AbstractHttpConfigurer::disable);
+                .csrf(AbstractHttpConfigurer::disable);
 
 
         return http.build();
