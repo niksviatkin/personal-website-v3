@@ -1,9 +1,9 @@
 package com.viatkin.portfolio_backend.project.controller;
 
-import com.viatkin.portfolio_backend.project.domain.Project;
 import com.viatkin.portfolio_backend.project.service.ProjectService;
 import com.viatkin.portfolio_backend.project.dto.CreateProjectRequest;
 import com.viatkin.portfolio_backend.project.dto.ProjectResponse;
+import com.viatkin.portfolio_backend.project.dto.UpdateProjectRequest;
 
 import jakarta.validation.Valid;
 
@@ -39,6 +39,18 @@ public class ProjectController {
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {
         ProjectResponse projectResponse = projectService.getProjectById(id);
         return ResponseEntity.ok(projectResponse);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectRequest request) {
+        ProjectResponse updatedProject = projectService.updateProject(id, request);
+        return ResponseEntity.ok(updatedProject);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+        projectService.deleteProject(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
