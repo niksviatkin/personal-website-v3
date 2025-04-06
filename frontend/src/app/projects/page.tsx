@@ -36,7 +36,7 @@ export default async function ProjectsPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projects.map((project) => (
-                        <div key={project.id} className="border rounded-lg shadow-md overflow-hidden bg-white dark:bg-gray-800 dark:border-gray-700">
+                        <Link key={project.id} href={`/projects/${project.id}`} className="block border rounded-lg shadow-md overflow-hidden bg-white dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200">
                             {project.imageUrl && project.imageUrl !== "/images/placeholder.png" && ( // Example: Conditionally show image
                                 // TODO: Using simple img tag for now. Consider Next/Image later for optimization.
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -68,7 +68,7 @@ export default async function ProjectsPage() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             )}
