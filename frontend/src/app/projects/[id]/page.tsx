@@ -3,7 +3,8 @@ import type {Project} from '@/types/project';
 import Link from 'next/link';
 import {notFound} from 'next/navigation'; // Import notFound
 
-// Define the API base URL (replace with env variable later)
+// TODO: Define the API base URL (replace with env variable later)
+
 const API_BASE_URL = 'http://localhost:8080';
 
 async function getProject(id: string): Promise<Project | null> {
@@ -25,19 +26,20 @@ async function getProject(id: string): Promise<Project | null> {
     }
 }
 
-// This page component receives params containing the dynamic segment 'id'
-export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
+type Props = {
+    params: { id: string };
+    // searchParams?: { [key: string]: string | string[] | undefined }; // Optional: if we need to search params
+};
+
+export default async function ProjectDetailPage({ params }: Props) {
     const project = await getProject(params.id);
 
-    // If project fetch failed or returned null (excluding 404 handled by notFound())
     if (!project) {
-        // You could render a specific error component here
         return <div className="container mx-auto p-4 text-center text-red-500">Failed to load project data.</div>;
     }
 
     return (
         <main className="container mx-auto p-4 md:p-8">
-            {/* Back to Projects Link */}
             <div className="mb-6">
                 <Link href="/projects" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                     &larr; Back to Projects
@@ -48,6 +50,8 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
                 <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
 
                 {project.imageUrl && (
+                    // TODO: Using simple img tag for now. Consider Next/Image later for optimization.
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={project.imageUrl} alt={project.title} className="w-full md:w-2/3 lg:w-1/2 h-auto rounded-md mb-4 mx-auto" />
                 )}
 
@@ -61,7 +65,6 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
                     </p>
                 )}
 
-                {/* Links */}
                 <div className="flex flex-wrap gap-4">
                     {project.repoUrl && (
                         <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
