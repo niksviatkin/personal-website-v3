@@ -1,7 +1,6 @@
 import React from 'react';
 import type {Project} from '@/types/project';
-import Link from 'next/link';
-import {notFound} from 'next/navigation'; // Import notFound
+import {notFound} from 'next/navigation';
 import StyledLink from '@/components/ui/StyledLink';
 
 // TODO: Define the API base URL (replace with env variable later)
