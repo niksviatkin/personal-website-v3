@@ -27,11 +27,12 @@ async function getProject(id: string): Promise<Project | null> {
 }
 
 type Props = {
-    params: { id: string };
+    params: Promise<{ id: string }>;
     // searchParams?: { [key: string]: string | string[] | undefined }; // Optional: if we need to search params
 };
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectDetailPage(props: Props) {
+    const params = await props.params;
     const project = await getProject(params.id);
 
     if (!project) {
@@ -45,14 +46,13 @@ export default async function ProjectDetailPage({ params }: Props) {
                     &larr; Back to Projects
                 </Link>
             </div>
-
             <article className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
 
                 {project.imageUrl && (
                     // TODO: Using simple img tag for now. Consider Next/Image later for optimization.
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={project.imageUrl} alt={project.title} className="w-full md:w-2/3 lg:w-1/2 h-auto rounded-md mb-4 mx-auto" />
+                    (<img src={project.imageUrl} alt={project.title} className="w-full md:w-2/3 lg:w-1/2 h-auto rounded-md mb-4 mx-auto" />)
                 )}
 
                 <div className="prose dark:prose-invert max-w-none mb-4"> {/* Use prose for nice text formatting */}
