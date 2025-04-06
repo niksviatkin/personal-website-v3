@@ -40,7 +40,7 @@ export default function RootLayout({
         {/* Simple Footer (Optional) */}
         <footer className="text-center py-4 mt-8 text-sm text-gray-500 dark:text-gray-400 border-t dark:border-gray-700">
             © {new Date().getFullYear()} Nikita Viatkin. All rights reserved.
-            {/* TODO: 3Add social links here later? */}
+            {/* TODO: Add social links here later? */}
         </footer>
         </body>
         </html>
