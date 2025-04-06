@@ -1,0 +1,58 @@
+name: CI Build, Test, Analyze
+
+# Trigger on pushes to main/develop and on Pull Requests targeting main/develop
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build_test_analyze:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    permissions: # Add permissions needed for Qodana to report results
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for Qodana history analysis
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'maven' # Cache Maven dependencies
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x' # Use an LTS version
+          cache: 'npm' # Cache npm dependencies
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build and Test Backend
+        run: mvn -B package --file backend/pom.xml
+
+      - name: Install Frontend Dependencies
+        run: npm ci --prefix frontend
+
+      - name: Lint Frontend
+        run: npm run lint --prefix frontend
+
+      - name: Build Frontend
+        run: npm run build --prefix frontend
+
+      - name: Qodana Scan
+        uses: JetBrains/qodana-action@v2024.3
+        with:
+          # Optional: specify args if needed, like project path if not root
+          # args: --project-dir, .
+          # Upload results to GitHub Security tab Code Scanning alerts
+          upload-result: true
+          use-annotations: true
