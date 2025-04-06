@@ -1,7 +1,7 @@
 import React from 'react';
 import type {Project} from '@/types/project';
-import Link from 'next/link';
-import {notFound} from 'next/navigation'; // Import notFound
+import {notFound} from 'next/navigation';
+import StyledLink from '@/components/ui/StyledLink';
 
 // TODO: Define the API base URL (replace with env variable later)
 
@@ -42,9 +42,10 @@ export default async function ProjectDetailPage(props: Props) {
     return (
         <main className="container mx-auto p-4 md:p-8">
             <div className="mb-6">
-                <Link href="/projects" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                {/* Use StyledLink for back navigation */}
+                <StyledLink href="/projects" variant="default">
                     &larr; Back to Projects
-                </Link>
+                </StyledLink>
             </div>
             <article className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
@@ -65,16 +66,16 @@ export default async function ProjectDetailPage(props: Props) {
                     </p>
                 )}
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4 mt-4"> {/* Added mt-4 */}
                     {project.repoUrl && (
-                        <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                        <StyledLink href={project.repoUrl} target="_blank" rel="noopener noreferrer" variant="primaryAction">
                             View Code (GitHub)
-                        </Link>
+                        </StyledLink>
                     )}
                     {project.liveUrl && (
-                        <Link href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+                        <StyledLink href={project.liveUrl} target="_blank" rel="noopener noreferrer" variant="secondaryAction">
                             View Live Demo
-                        </Link>
+                        </StyledLink>
                     )}
                 </div>
             </article>
