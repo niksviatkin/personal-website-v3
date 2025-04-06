@@ -4,6 +4,7 @@ import com.viatkin.portfolio_backend.project.domain.Project;
 import com.viatkin.portfolio_backend.project.repository.ProjectRepository;
 import com.viatkin.portfolio_backend.project.dto.CreateProjectRequest;
 import com.viatkin.portfolio_backend.project.dto.ProjectResponse;
+import com.viatkin.portfolio_backend.error.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,12 @@ public class ProjectService {
         Project savedProject = projectRepository.save(newProject);
 
         return mapToProjectResponse(savedProject);
+    }
+
+    public ProjectResponse getProjectById(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
+        return mapToProjectResponse(project);
     }
 
     private ProjectResponse mapToProjectResponse(Project project) {
