@@ -3,6 +3,7 @@ package com.viatkin.portfolio_backend.project.controller;
 import com.viatkin.portfolio_backend.project.domain.Project;
 import com.viatkin.portfolio_backend.project.service.ProjectService;
 import com.viatkin.portfolio_backend.project.dto.CreateProjectRequest;
+import com.viatkin.portfolio_backend.project.dto.ProjectResponse;
 
 import jakarta.validation.Valid;
 
@@ -31,15 +32,13 @@ public class ProjectController {
     }
 
     @GetMapping("/projects")
-    public List<Project> getAllProjects() {
+    public List<ProjectResponse> getAllProjects() {
         return projectService.getAllProjects();
     }
 
     @PostMapping("/projects")
-    public ResponseEntity<Project> createProject(@Valid @RequestBody CreateProjectRequest request) {
-
-        Project createdProject = projectService.createProject(request);
-
+    public ResponseEntity<ProjectResponse> createProject(@Valid @RequestBody CreateProjectRequest request) {
+        ProjectResponse createdProject = projectService.createProject(request);
         return new ResponseEntity<>(createdProject, HttpStatus.CREATED);
     }
 
