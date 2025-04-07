@@ -12,8 +12,6 @@ async function getAboutContent(): Promise<AboutPageData | null> {
     }
     try {
         const fullUrl = `${STRAPI_URL}/about-page`;
-        console.log("Fetching About Page from:", fullUrl); // FIXME: Optional: for debugging
-
         const res = await fetch(fullUrl, { cache: 'no-store' }); // Fetch fresh data in dev
 
         if (!res.ok) {
