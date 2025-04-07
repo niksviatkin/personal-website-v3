@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { BlocksRenderer, type BlocksContent } from '@strapi/blocks-react-renderer'; // Import Strapi Blocks Renderer and type
 import type { StrapiResumeResponse, ResumeData } from '@/types/strapi'; // Import updated types
 import Button from '@/components/ui/Button';
