@@ -1,7 +1,10 @@
 package com.viatkin.portfolio_backend.company.domain;
 
+import com.viatkin.portfolio_backend.experience.domain.Experience;
+
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.List;
 
 @Entity
 @Table(name = "companies")
@@ -24,7 +27,11 @@ public class Company {
     @Column(name = "website_url")
     private String websiteUrl;
 
-    // --- Inverse side of relationship (Add later when Experience exists) ---
-    // @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // private List<Experience> experiences;
+    @OneToMany(
+            mappedBy = "company",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Experience> experiences;
 }
