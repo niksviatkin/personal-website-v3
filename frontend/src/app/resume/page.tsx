@@ -1,107 +1,166 @@
 import React from 'react';
-import Button from "@/components/ui/Button";
-import StyledLink from "@/components/ui/StyledLink";
+import Link from 'next/link';
+import { BlocksRenderer, type BlocksContent } from '@strapi/blocks-react-renderer'; // Import Strapi Blocks Renderer and type
+import type { StrapiResumeResponse, ResumeData } from '@/types/strapi'; // Import updated types
+import Button from '@/components/ui/Button';
+import StyledLink from '@/components/ui/StyledLink';
+import { notFound } from 'next/navigation'; // Can potentially use if fetch fails critically
 
-const resumeData = {
-    name: "Nikita Viatkin",
-    title: "Software Developer",
-    location: "Reynoldsburg, Ohio",
-    email: "niksviatkin@gmail.com",
-    linkedin: "https://linkedin.com/in/niksviatkin",
-    github: "https://github.com/niksviatkin",
-    summary: "Driven and detail-oriented Software Developer with experience in full-stack development using Java/Spring Boot and React/Next.js. Seeking opportunities to contribute to innovative projects and continue learning in a challenging environment.",
-    skills: {
-        languages: "Java, JavaScript, TypeScript, SQL, HTML, CSS",
-        frameworks: "Spring Boot, Spring Data JPA, Spring Security, React, Next.js",
-        databases: "PostgreSQL, H2",
-        tools: "Docker, Git, GitHub Actions, Maven, npm, Postman, IntelliJ, WebStorm, OCI Basics",
-        other: "REST API Design, TDD (basic), Agile Methodologies (basic)",
-    },
-    experience: [
-        {
-            title: "Software Developer Bootcamp (Example)",
-            company: "Example Tech Corp",
-            location: "Columbus, OH",
-            years: "Summer 2024",
-            description: [
-                "Contributed to the development of a web application using Java and Spring Boot.",
-                "Implemented REST API endpoints for data retrieval.",
-                "Collaborated with team members using Git and Agile practices.",
-            ],
-        },
-        // TODO: Add more experience objects here
-    ],
-    education: [
-        {
-            degree: "Bachelor of Science in Computer Science (Example)",
-            university: "Example University",
-            years: "2020 - 2024",
-            details: "Relevant coursework: Data Structures, Algorithms, Database Management, Web Development.",
-        },
-        // TODO: Add more education here
-    ],
-};
-// --- End of manual data entry ---
+const STRAPI_URL = process.env.STRAPI_API_URL;
 
-export default function ResumePage() {
+async function getResumeContent(): Promise<ResumeData | null> {
+    // Basic check if URL is configured
+    if (!STRAPI_URL) {
+        console.error("Strapi API URL environment variable is not configured.");
+        return null;
+    }
+    try {
+        // Populate everything, including the 'certifications' component field and relations
+        const fullUrl = `${STRAPI_URL}/resume?populate=*`; // Using populate=deep might be easier than listing all relations/components
+        // Alternative: Explicit populate: ?populate[experience_items]=*&populate[education_items]=*&populate[certifications]=*
+        console.log("Fetching Resume from:", fullUrl); // Optional debugging
+
+        const res = await fetch(fullUrl, { cache: 'no-store' }); // Fetch fresh data in dev
+
+        if (!res.ok) {
+            console.error(`Failed to fetch Resume: ${res.status} ${res.statusText}`);
+            // You could potentially trigger notFound() here for critical fetch failures
+            if (res.status === 404) notFound();
+            return null;
+        }
+        const jsonResponse: StrapiResumeResponse = await res.json();
+
+        // Extract the data object containing all attributes
+        const resumeData = jsonResponse.data ?? null;
+        console.log("Fetched Resume data:", resumeData ? "[Resume Data Object]" : resumeData); // Optional debugging
+        return resumeData;
+
+    } catch (error) {
+        console.error("Error fetching Resume:", error);
+        return null;
+    }
+}
+
+// This page doesn't receive dynamic params like [id], so props are simpler
+export default async function ResumePage() {
+    const resume = await getResumeContent(); // resume is ResumeData | null
+
+    // Handle case where data couldn't be fetched
+    if (!resume) {
+        return <main className="max-w-4xl mx-auto p-4 md:p-8 text-center text-red-500">Error loading resume data. Please ensure the CMS is running and content is published.</main>;
+    }
+
+    // Now we access everything from the 'resume' object fetched from Strapi
+
     return (
         <main className="max-w-4xl mx-auto p-4 md:p-8 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+            {/* --- Header section using Strapi data --- */}
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold">{resumeData.name}</h1>
-                <p className="text-xl text-gray-600 dark:text-gray-400">{resumeData.title}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-300">{resumeData.location}</p>
-                <div className="mt-2 flex justify-center space-x-4 text-blue-600 dark:text-blue-400">
-                    <a href={`mailto:${resumeData.email}`}>{resumeData.email}</a>
-                    <StyledLink href={resumeData.linkedin} variant="default" target="_blank" rel="noopener noreferrer">LinkedIn</StyledLink>
-                    <StyledLink href={resumeData.github} variant="default" target="_blank" rel="noopener noreferrer">GitHub</StyledLink>
+                {resume.contact_name && <h1 className="text-4xl font-bold">{resume.contact_name}</h1>}
+                {resume.contact_pageTitle && <p className="text-xl text-gray-600 dark:text-gray-400">{resume.contact_pageTitle}</p>}
+                {resume.contact_location && <p className="text-sm text-gray-500 dark:text-gray-300">{resume.contact_location}</p>}
+                <div className="mt-2 flex justify-center flex-wrap gap-x-4 gap-y-1 text-blue-600 dark:text-blue-400">
+                    {resume.contact_email && <a href={`mailto:${resume.contact_email}`}>{resume.contact_email}</a>}
+                    {resume.contact_linkedinUrl && <StyledLink href={resume.contact_linkedinUrl} target="_blank" rel="noopener noreferrer" variant='default'>LinkedIn</StyledLink>}
+                    {resume.contact_githubUrl && <StyledLink href={resume.contact_githubUrl} target="_blank" rel="noopener noreferrer" variant='default'>GitHub</StyledLink>}
                 </div>
-                {/* TODO: Optional: PDF Download Button */}
                 <div className="mt-4">
-                    <Button href="/Nikita_Viatkin_Resume.pdf" download variant="primary" size="sm">
+                    <Button
+                        href="/Nikita_Viatkin_Resume.pdf" // Ensure PDF is in /frontend/public/
+                        download
+                        variant="primary"
+                        size="sm"
+                    >
                         Download PDF Resume
                     </Button>
                 </div>
             </div>
 
-            <section className="mb-6">
-                <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Summary</h2>
-                <p className="text-gray-700 dark:text-gray-300">{resumeData.summary}</p>
-            </section>
+            {/* --- Dynamic Sections from Strapi --- */}
+            {resume.summary && (
+                <section className="mb-6">
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Summary</h2>
+                    <p className="text-gray-700 dark:text-gray-300">{resume.summary}</p>
+                </section>
+            )}
 
             <section className="mb-6">
                 <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Skills</h2>
-                <div className="text-gray-700 dark:text-gray-300">
-                    {Object.entries(resumeData.skills).map(([category, skills]) => (
-                        <p key={category}><strong className="capitalize">{category}:</strong> {skills}</p>
-                    ))}
+                <div className="text-gray-700 dark:text-gray-300 space-y-1">
+                    {resume.skills_languages && <p><strong>Languages:</strong> {resume.skills_languages}</p>}
+                    {resume.skills_frameworks && <p><strong>Frameworks:</strong> {resume.skills_frameworks}</p>}
+                    {resume.skills_databases && <p><strong>Databases:</strong> {resume.skills_databases}</p>}
+                    {resume.skills_tools && <p><strong>Tools & Techniques:</strong> {resume.skills_tools}</p>}
+                    {resume.skills_other && <p><strong>Other:</strong> {resume.skills_other}</p>}
                 </div>
             </section>
 
-            <section className="mb-6">
-                <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Experience</h2>
-                {resumeData.experience.map((job, index) => (
-                    <div key={index} className="mb-4">
-                        <h3 className="text-lg font-bold">{job.title}</h3>
-                        <p className="font-semibold">{job.company} | {job.location}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">{job.years}</p>
-                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                            {job.description.map((point, i) => <li key={i}>{point}</li>)}
-                        </ul>
-                    </div>
-                ))}
-            </section>
+            {resume.experience_items && resume.experience_items.length > 0 && (
+                <section className="mb-6">
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Experience</h2>
+                    {resume.experience_items.map((item) => (
+                        <div key={item.id} className="mb-4 last:mb-0">
+                            <h3 className="text-lg font-bold">{item.title}</h3>
+                            <p className="font-semibold">{item.company} {item.location && `| ${item.location}`}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">{item.years}</p>
+                            {/* Use Strapi Blocks Renderer for description */}
+                            {item.description && (
+                                <div className="prose prose-sm dark:prose-invert max-w-none mt-1">
+                                    <BlocksRenderer content={item.description as BlocksContent} /> {/* Cast to BlocksContent */}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </section>
+            )}
 
-            <section>
-                <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Education</h2>
-                {resumeData.education.map((edu, index) => (
-                    <div key={index} className="mb-4">
-                        <h3 className="text-lg font-bold">{edu.degree}</h3>
-                        <p className="font-semibold">{edu.university}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">{edu.years}</p>
-                        {edu.details && <p className="text-gray-700 dark:text-gray-300">{edu.details}</p>}
-                    </div>
-                ))}
-            </section>
+            {resume.education_items && resume.education_items.length > 0 && (
+                <section className="mb-6">
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Education</h2>
+                    {resume.education_items.map((item) => (
+                        <div key={item.id} className="mb-4 last:mb-0">
+                            <h3 className="text-lg font-bold">{item.degree}</h3>
+                            <p className="font-semibold">{item.university}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">{item.years}</p>
+                            {item.details && <p className="text-gray-700 dark:text-gray-300 text-sm">{item.details}</p>}
+                        </div>
+                    ))}
+                </section>
+            )}
+
+            {/* Certifications Section from Strapi Component */}
+            {resume.certifications && resume.certifications.length > 0 && (
+                <section className="mb-6">
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Certifications</h2>
+                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                        {resume.certifications.map((cert) => (
+                            <li key={cert.id}> {/* Use component instance id */}
+                                {cert.name} {cert.issuer && `(${cert.issuer}${cert.date ? `, ${cert.date}` : ''})`}
+                                {cert.link && (
+                                    <StyledLink href={cert.link} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs" variant='default'>
+                                        [Verify]
+                                    </StyledLink>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+
+            {/* Languages & Interests Sections from Strapi */}
+            {resume.languages && (
+                <section className="mb-6">
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Languages</h2>
+                    <p className="text-gray-700 dark:text-gray-300">{resume.languages}</p>
+                </section>
+            )}
+            {resume.interests && (
+                <section>
+                    <h2 className="text-2xl font-semibold border-b pb-1 mb-3">Interests</h2>
+                    <p className="text-gray-700 dark:text-gray-300">{resume.interests}</p>
+                </section>
+            )}
+
         </main>
     );
 }
