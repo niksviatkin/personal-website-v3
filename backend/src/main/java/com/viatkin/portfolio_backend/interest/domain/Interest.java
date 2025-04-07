@@ -1,5 +1,8 @@
 package com.viatkin.portfolio_backend.interest.domain;
 
+import java.util.Set;
+import java.util.HashSet;
+import com.viatkin.portfolio_backend.resume.domain.ResumeContent;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,4 +20,7 @@ public class Interest {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @ManyToMany(mappedBy = "interests")
+    private Set<ResumeContent> resumes = new HashSet<>();
 }

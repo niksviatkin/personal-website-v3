@@ -1,6 +1,9 @@
 package com.viatkin.portfolio_backend.skill.domain;
 
-import com.viatkin.portfolio_backend.skill.domain.SkillCategory;
+import java.util.Set;
+import java.util.HashSet; // Import HashSet for initialization
+import com.viatkin.portfolio_backend.project.domain.Project;
+import com.viatkin.portfolio_backend.resume.domain.ResumeContent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,10 +33,9 @@ public class Skill {
     @JoinColumn(name = "category_id")
     private SkillCategory category;
 
-    // --- Inverse side of ManyToMany relationships (Add later) ---
-    // @ManyToMany(mappedBy = "technologies") // In Project entity
-    // private Set<Project> projects;
+    @ManyToMany(mappedBy = "technologies")
+    private Set<Project> projects = new HashSet<>();
 
-    // @ManyToMany(mappedBy = "skills") // In ResumeContent entity
-    // private Set<ResumeContent> resumes;
+    @ManyToMany(mappedBy = "skills")
+    private Set<ResumeContent> resumes = new HashSet<>();
 }
