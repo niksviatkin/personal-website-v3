@@ -1,9 +1,12 @@
 package com.viatkin.portfolio_backend.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
+
+import java.util.Set;
 
 @Data
 public class CreateProjectRequest {
@@ -24,5 +27,6 @@ public class CreateProjectRequest {
     @URL(message = "Live URL must be a valid URL")
     private String liveUrl;
 
-    private String technologies;
+    @NotEmpty(message = "At least one technology ID must be provided")
+    private Set<Long> technologyIds;
 }
