@@ -6,18 +6,28 @@ import com.viatkin.portfolio_backend.project.dto.CreateProjectRequest;
 import com.viatkin.portfolio_backend.project.dto.ProjectResponse;
 import com.viatkin.portfolio_backend.error.ResourceNotFoundException;
 import com.viatkin.portfolio_backend.project.dto.UpdateProjectRequest;
+import com.viatkin.portfolio_backend.skill.domain.Skill;
+import com.viatkin.portfolio_backend.skill.repository.SkillRepository;
+import com.viatkin.portfolio_backend.skill.dto.SkillResponse;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepository;
+    private final SkillRepository skillRepository;
 
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(ProjectRepository projectRepository, SkillRepository skillRepository) {
         this.projectRepository = projectRepository;
+        this.skillRepository = skillRepository;
     }
 
     public List<ProjectResponse> getAllProjects() {
@@ -27,11 +37,25 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
-    public ProjectResponse createProject(CreateProjectRequest createRequest) {
-        Project project = new Project();
-        populateProjectFields(project, createRequest);
-        Project savedProject = projectRepository.save(project);
-        return createProjectResponse(savedProject);
+    public ProjectResponse createProject(CreateProjectRequest request) {
+        Project newProject = new Project();
+        newProject.setTitle(request.getTitle());
+        newProject.setDescription(request.getDescription());
+        newProject.setImageUrl(request.getImageUrl());
+        newProject.setRepoUrl(request.getRepoUrl());
+        newProject.setLiveUrl(request.getLiveUrl());
+        // newProject.setDisplayOrder(...); // Set display order if applicable
+
+        if (request.getTechnologyIds() != null && !request.getTechnologyIds().isEmpty()) {
+            Set<Skill> technologies = skillRepository.findByIdIn(request.getTechnologyIds());
+            // TODO: Optional: Check if all requested IDs were found
+            newProject.setTechnologies(technologies);
+        } else {
+            newProject.setTechnologies(new HashSet<>());
+        }
+
+        Project savedProject = projectRepository.save(newProject);
+        return createProjectResponse(savedProject); // Use existing helper
     }
 
     public ProjectResponse getProjectById(Long id) {
@@ -39,10 +63,25 @@ public class ProjectService {
         return createProjectResponse(project);
     }
 
-    public ProjectResponse updateProject(Long id, UpdateProjectRequest updateRequest) {
-        Project projectToUpdate = getProjectByIdOrThrow(id);
-        populateProjectFields(projectToUpdate, updateRequest);
-        Project updatedProject = projectRepository.save(projectToUpdate);
+    public ProjectResponse updateProject(Long id, UpdateProjectRequest request) {
+        Project existingProject = getProjectByIdOrThrow(id);
+
+        // Update simple fields
+        existingProject.setTitle(request.getTitle());
+        existingProject.setDescription(request.getDescription());
+        existingProject.setImageUrl(request.getImageUrl());
+        existingProject.setRepoUrl(request.getRepoUrl());
+        existingProject.setLiveUrl(request.getLiveUrl());
+        // existingProject.setDisplayOrder(...); // Update display order if applicable
+
+        Set<Skill> technologies = new HashSet<>();
+        if (request.getTechnologyIds() != null && !request.getTechnologyIds().isEmpty()) {
+            technologies = skillRepository.findByIdIn(request.getTechnologyIds());
+            // TODO: Optional: Check if all requested IDs were found
+        }
+        existingProject.setTechnologies(technologies);
+
+        Project updatedProject = projectRepository.save(existingProject);
         return createProjectResponse(updatedProject);
     }
 
@@ -58,24 +97,6 @@ public class ProjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
     }
 
-    private void populateProjectFields(Project project, CreateProjectRequest request) {
-        project.setTitle(request.getTitle());
-        project.setDescription(request.getDescription());
-        project.setImageUrl(request.getImageUrl());
-        project.setRepoUrl(request.getRepoUrl());
-        project.setLiveUrl(request.getLiveUrl());
-        project.setTechnologies(request.getTechnologies());
-    }
-
-    private void populateProjectFields(Project project, UpdateProjectRequest request) {
-        project.setTitle(request.getTitle());
-        project.setDescription(request.getDescription());
-        project.setImageUrl(request.getImageUrl());
-        project.setRepoUrl(request.getRepoUrl());
-        project.setLiveUrl(request.getLiveUrl());
-        project.setTechnologies(request.getTechnologies());
-    }
-
     private ProjectResponse createProjectResponse(Project project) {
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());
@@ -84,7 +105,26 @@ public class ProjectService {
         response.setImageUrl(project.getImageUrl());
         response.setRepoUrl(project.getRepoUrl());
         response.setLiveUrl(project.getLiveUrl());
-        response.setTechnologies(project.getTechnologies());
+        response.setDisplayOrder(project.getDisplayOrder());
+
+        if (project.getTechnologies() != null) {
+            response.setTechnologies(
+                    project.getTechnologies().stream()
+                            .map(this::mapToSkillResponse)
+                            .collect(Collectors.toSet())
+            );
+        } else {
+            response.setTechnologies(Collections.emptySet());
+        }
+
         return response;
+    }
+
+    private SkillResponse mapToSkillResponse(Skill skill) {
+        return new SkillResponse(
+                skill.getId(),
+                skill.getName(),
+                skill.getIconIdentifier()
+        );
     }
 }
