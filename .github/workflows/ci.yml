@@ -1,17 +1,99 @@
 name: CI Build, Test, Analyze
 
-# Trigger on pushes to main/develop and on Pull Requests targeting main/develop
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      # - 'frontend/**' # Temporarily disable FE build on push to save resources, rely on PR?
+      - '.github/workflows/ci.yml'
+      - 'pom.xml'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
+      - 'pom.xml'
+      # - 'package.json'
 
 jobs:
-  build_test_analyze:
-    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+  backend-checks:
+    name: Backend Build, Test, Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop')))
 
-    permissions: # Add permissions needed for Qodana to report results
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build, Test, Coverage, Dependency Check (Backend)
+        run: mvn -B verify --file backend/pom.xml
+
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-code-coverage-report
+          path: backend/target/site/jacoco/
+
+      - name: Upload OWASP Dependency Check Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-dependency-check-report
+          path: backend/target/dependency-check-report.html
+
+  frontend-checks:
+    name: Frontend Lint, Test, Build, Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop')))
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: npm ci --prefix frontend
+
+      - name: Check Formatting (Frontend)
+        run: npm run format:check --prefix frontend
+
+      - name: Lint Frontend
+        run: npm run lint --prefix frontend
+
+      - name: Test Frontend (Placeholder)
+        run: npm test --prefix frontend
+        continue-on-error: true
+
+      - name: Build Frontend
+        run: npm run build --prefix frontend
+
+      - name: Check Dependency Vulnerabilities (Frontend)
+        run: npm audit --prefix frontend --audit-level=moderate
+
+  qodana:
+    name: Qodana Code Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main'))
+
+    # Run this job only if the previous jobs were successful (optional, could run in parallel or always)
+    # needs: [backend-checks, frontend-checks]
+
+    permissions:
       actions: read
       contents: read
       security-events: write
@@ -20,41 +102,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Needed for Qodana history analysis
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
-          cache: 'maven' # Cache Maven dependencies
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x' # Use an LTS version
-          cache: 'npm' # Cache npm dependencies
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Build and Test Backend
-        run: mvn -B package --file backend/pom.xml
-
-      - name: Install Frontend Dependencies
-        run: npm ci --prefix frontend
-
-      - name: Lint Frontend
-        run: npm run lint --prefix frontend
-
-      - name: Build Frontend
-        run: npm run build --prefix frontend
+          fetch-depth: 0
 
       - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2024.3
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+        uses: JetBrains/qodana-action@v2024.1
         with:
-          # Optional: specify args if needed, like project path if not root
-          # args: --project-dir, .
-          # Upload results to GitHub Security tab Code Scanning alerts
+          linter: jetbrains/qodana-jvm-community:latest
           upload-result: true
           use-annotations: true
