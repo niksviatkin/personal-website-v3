@@ -1,0 +1,19 @@
+
+# Dependencies
+node_modules
+
+# Build output
+.next/
+out/
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Optional: Configuration files if you don't want them formatted
+# next.config.mjs
+# postcss.config.js
+# tailwind.config.js
+
+# Optional: Public assets
+# public/
