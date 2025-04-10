@@ -6,32 +6,52 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
-@Configuration // Marks this class as a source of bean definitions
-@EnableWebSecurity // Enables Spring Security's web security support
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean // Defines a bean that Spring manages
+    @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                // Allow unauthenticated access to API endpoints under /v1/**
-                                .requestMatchers("/v1/**").permitAll()
-                                // Require authentication for any other request (if any exist later)
-                                .anyRequest().authenticated()
-                )
-                // You might keep defaults for login forms/http basic if other parts need them later
-                .formLogin(withDefaults()) // Example: using default form login config
-                .httpBasic(withDefaults()) // Example: using default http basic config
 
-        // If using permitAll() for specific paths, CSRF protection is usually still good to have enabled.
-        // Only disable CSRF if absolutely necessary & you understand the implications,
-        // often needed for stateless APIs or if handling CSRF differently.
+        http.authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests.requestMatchers(
+                                        "/",
+                                        "/about",
+                                        "/resume",
+                                        "/projects",
+                                        "/projects/**",
+                                        "/v1/**",
+                                        "/error",
+                                        "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                                        "/*.png", "/*.jpg", "/*.svg", "/*.pdf"
+                                ).permitAll()
+                                // .requestMatchers("/admin/**", "/admin/api/**").hasRole("ADMIN")
+                                // For now, secure everything as a starting point:
+                                .anyRequest().authenticated() // All other requests require authentication
+                )
+                .formLogin(form -> form
+//                        .loginPage("/your-custom-login-page") // If create a custom UI login page
+                                .permitAll() // Allow everyone to access the login page itself
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                )
+                // Keep HTTP Basic enabled (optional, useful for API testing with Postman)
+                .httpBasic(withDefaults())
+                // Keep CSRF disabled (suitable for stateless APIs / SPA admin panels)
                 .csrf(AbstractHttpConfigurer::disable);
 
-
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -53,4 +53,9 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/api/v1/secure-test")
+    public String secureTest() {
+        return "SECURE OK";
+    }
+
 }

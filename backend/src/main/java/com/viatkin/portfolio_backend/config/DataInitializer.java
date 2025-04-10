@@ -6,11 +6,14 @@ import com.viatkin.portfolio_backend.skill.domain.Skill;
 import com.viatkin.portfolio_backend.skill.domain.SkillCategory;
 import com.viatkin.portfolio_backend.skill.repository.SkillCategoryRepository;
 import com.viatkin.portfolio_backend.skill.repository.SkillRepository;
+import com.viatkin.portfolio_backend.user.domain.User;
+import com.viatkin.portfolio_backend.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -24,18 +27,44 @@ public class DataInitializer implements CommandLineRunner {
     private final ProjectRepository projectRepository;
     private final SkillCategoryRepository skillCategoryRepository;
     private final SkillRepository skillRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(ProjectRepository projectRepository,
                            SkillCategoryRepository skillCategoryRepository,
-                           SkillRepository skillRepository) {
+                           SkillRepository skillRepository,
+                           UserRepository userRepository,
+                           PasswordEncoder passwordEncoder) {
         this.projectRepository = projectRepository;
         this.skillCategoryRepository = skillCategoryRepository;
         this.skillRepository = skillRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
         log.info("Checking initial data (dev profile active)...");
+
+        if (userRepository.count() == 0) {
+            log.warn("!!! No users found. Seeding default admin user !!!");
+            String adminUsername = "admin";
+            String adminPassword = "password"; // CHANGE THIS in a real scenario
+            User adminUser = new User(
+                    null,
+                    adminUsername,
+                    passwordEncoder.encode(adminPassword),
+                    "ROLE_ADMIN",
+                    true
+            );
+            userRepository.save(adminUser);
+            log.warn("*********************************************************************");
+            log.warn("** Created default admin user: username='{}', password='{}' **", adminUsername, adminPassword);
+            log.warn("** CHANGE THIS PASSWORD IMMEDIATELY if used outside local dev! **");
+            log.warn("*********************************************************************");
+        } else {
+            log.info("Users already exist. Skipping admin user seeding.");
+        }
 
         SkillCategory catBackend = null;
         SkillCategory catFrontend = null;
@@ -106,8 +135,8 @@ public class DataInitializer implements CommandLineRunner {
                     1,
                     techP1
             );
-            Project project2 = new Project( null,"E-commerce Platform Mockup", "...", "/images/ecommerce.png", "...", null, 2, techP2);
-            Project project3 = new Project( null,"Task Management App API", "...", "/images/task-app.png", "...", null, 3, new HashSet<>(List.of(skillJava, skillSpring)));
+            Project project2 = new Project(null, "E-commerce Platform Mockup", "...", "/images/ecommerce.png", "...", null, 2, techP2);
+            Project project3 = new Project(null, "Task Management App API", "...", "/images/task-app.png", "...", null, 3, new HashSet<>(List.of(skillJava, skillSpring)));
 
 
             projectRepository.saveAll(List.of(project1, project2, project3));
