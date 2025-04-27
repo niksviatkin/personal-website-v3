@@ -20,6 +20,7 @@ public class ContentController {
 
     @GetMapping("/about")
     public ResponseEntity<AboutContentDto> getAboutContent() {
+        // TODO: Potentially add caching headers here later
         return ResponseEntity.ok(aboutContentService.getAboutContent());
     }
 }

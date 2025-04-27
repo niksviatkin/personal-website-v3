@@ -19,15 +19,13 @@ public class AboutContentService {
 
     @Transactional(readOnly = true)
     public AboutContentDto getAboutContent() {
-        AboutContent content = aboutContentRepository.findById(ABOUT_CONTENT_ID)
-                .orElseThrow(() -> new ResourceNotFoundException("About content not found"));
+        AboutContent content = findAboutContentOrFail();
         return mapToDto(content);
     }
 
     @Transactional
     public AboutContentDto updateAboutContent(AboutContentDto dto) {
-        AboutContent content = aboutContentRepository.findById(ABOUT_CONTENT_ID)
-                .orElseThrow(() -> new ResourceNotFoundException("About content not found, cannot update"));
+        AboutContent content = findAboutContentOrFail();
 
         content.setTitle(dto.getTitle());
         content.setBody(dto.getBody());
@@ -36,7 +34,23 @@ public class AboutContentService {
         return mapToDto(updatedContent);
     }
 
+    private AboutContent findAboutContentOrFail() {
+        return aboutContentRepository.findById(ABOUT_CONTENT_ID)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "About content not found with ID: " + ABOUT_CONTENT_ID + ". Please ensure it has been seeded."
+                ));
+    }
+
     private AboutContentDto mapToDto(AboutContent entity) {
+        // Ensure AboutContentDto constructor matches or use setters
         return new AboutContentDto(entity.getTitle(), entity.getBody());
+    }
+
+    @Transactional
+    public void initializeAboutContent(String defaultTitle, String defaultBody) {
+        if (!aboutContentRepository.existsById(ABOUT_CONTENT_ID)) {
+            AboutContent initialContent = new AboutContent(ABOUT_CONTENT_ID, defaultTitle, defaultBody);
+            aboutContentRepository.save(initialContent);
+        }
     }
 }

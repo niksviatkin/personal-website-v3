@@ -15,7 +15,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.viatkin.portfolio_backend.content.domain.AboutContent;
+import com.viatkin.portfolio_backend.content.service.AboutContentService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -31,15 +31,15 @@ public class DataInitializer implements CommandLineRunner {
     private final SkillRepository skillRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AboutContentRepository aboutContentRepository;
+    private final AboutContentService aboutContentService;
 
     public DataInitializer(ProjectRepository projectRepository,
                            SkillCategoryRepository skillCategoryRepository,
                            SkillRepository skillRepository,
                            UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           AboutContentRepository aboutContentRepository) {
-        this.aboutContentRepository = aboutContentRepository;
+                           AboutContentService aboutContentService) {
+        this.aboutContentService = aboutContentService;
         this.projectRepository = projectRepository;
         this.skillCategoryRepository = skillCategoryRepository;
         this.skillRepository = skillRepository;
@@ -150,8 +150,14 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Project data already exists. Skipping seeding.");
         }
 
-        if (aboutContentRepository.count() == 0) {
-            aboutContentRepository.save(new AboutContent(1L, "Default Title", "Default Body"));
+        try {
+            aboutContentService.initializeAboutContent(
+                    "About Me (Default)", // Default title
+                    "Please update this content via the admin panel." // Default body
+            );
+            log.info("Checked/Initialized AboutContent.");
+        } catch (Exception e) {
+            log.error("Failed to initialize AboutContent", e);
         }
     }
 }

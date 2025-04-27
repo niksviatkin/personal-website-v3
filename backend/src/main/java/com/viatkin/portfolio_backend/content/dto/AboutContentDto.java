@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AboutContentDto {
-    @Size(max = 255)
+    @Size(max = 255, message = "Title cannot exceed 255 characters")
     private String title;
 
     @NotBlank(message = "About content body cannot be blank")
