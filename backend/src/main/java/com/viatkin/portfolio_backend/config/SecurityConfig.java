@@ -30,7 +30,8 @@ public class SecurityConfig {
                                         "/css/**", "/js/**", "/images/**", "/favicon.ico",
                                         "/*.png", "/*.jpg", "/*.svg", "/*.pdf"
                                 ).permitAll()
-                                // .requestMatchers("/admin/**", "/admin/api/**").hasRole("ADMIN")
+                                .requestMatchers("/admin/**", "/admin/api/**").hasRole("ADMIN")
+                                //  .requestMatchers("/admin/api/**").hasRole("ADMIN")
                                 // For now, secure everything as a starting point:
                                 .anyRequest().authenticated() // All other requests require authentication
                 )

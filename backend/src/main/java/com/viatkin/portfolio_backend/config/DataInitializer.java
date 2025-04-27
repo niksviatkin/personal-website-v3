@@ -1,5 +1,6 @@
 package com.viatkin.portfolio_backend.config;
 
+import com.viatkin.portfolio_backend.content.repository.AboutContentRepository;
 import com.viatkin.portfolio_backend.project.domain.Project;
 import com.viatkin.portfolio_backend.project.repository.ProjectRepository;
 import com.viatkin.portfolio_backend.skill.domain.Skill;
@@ -14,6 +15,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.viatkin.portfolio_backend.content.domain.AboutContent;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,12 +31,15 @@ public class DataInitializer implements CommandLineRunner {
     private final SkillRepository skillRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AboutContentRepository aboutContentRepository;
 
     public DataInitializer(ProjectRepository projectRepository,
                            SkillCategoryRepository skillCategoryRepository,
                            SkillRepository skillRepository,
                            UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           AboutContentRepository aboutContentRepository) {
+        this.aboutContentRepository = aboutContentRepository;
         this.projectRepository = projectRepository;
         this.skillCategoryRepository = skillCategoryRepository;
         this.skillRepository = skillRepository;
@@ -143,6 +148,10 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Sample projects seeded.");
         } else {
             log.info("Project data already exists. Skipping seeding.");
+        }
+
+        if (aboutContentRepository.count() == 0) {
+            aboutContentRepository.save(new AboutContent(1L, "Default Title", "Default Body"));
         }
     }
 }
